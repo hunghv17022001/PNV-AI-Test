@@ -1,0 +1,26 @@
+{
+  "name": "simple-gemini-ai-app",
+  "version": "1.0.0",
+  "description": "Một API đơn giản dùng Gemini với Node.js (Express, service, controller)",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "NODE_ENV=development node index.js"
+  },
+  "keywords": [
+    "gemini",
+    "google-generative-ai",
+    "ai",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.0",
+    "morgan": "^1.10.0"
+  }
+}

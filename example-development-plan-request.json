@@ -1,0 +1,84 @@
+{
+  "_comment": "LƯU Ý: interviewHistory PHẢI bao gồm TẤT CẢ 14 aspects. Gọi GET /api/ai/aspects để lấy danh sách đầy đủ. Mỗi aspect phải có: aspectName (hoặc name), score (1-7), và comment (có thể là chuỗi rỗng nhưng phải có field). Điểm score sẽ tương ứng với level trong competencySkillData.",
+  "domain": "Y tế",
+  "interviewHistory": [
+    {
+      "aspectName": "Khả Năng Thích Ứng & Tư Duy Phát Triển (Adaptability & Growth Mindset)",
+      "score": 3,
+      "comment": "Có khả năng thích ứng tốt với các thay đổi trong công nghệ AI y tế, nhưng cần cải thiện tư duy phát triển để đón đầu xu hướng mới"
+    },
+    {
+      "aspectName": "Tự Học & Cải Tiến Liên Tục (Self-Learning & Continuous Improvement)",
+      "score": 2,
+      "comment": "Có động lực tự học nhưng chưa có phương pháp học tập có hệ thống cho AI trong y tế"
+    },
+    {
+      "aspectName": "Tư Duy Phản Biện & Lý Luận Đạo Đức (Critical Thinking & Ethical Reasoning)",
+      "score": 4,
+      "comment": "Có khả năng tư duy phản biện tốt, đặc biệt trong việc đánh giá tính đạo đức của AI trong y tế"
+    },
+    {
+      "aspectName": "Trí Tuệ Ranh Giới Con Người-AI (Human-AI Boundary Intelligence)",
+      "score": 3,
+      "comment": "Hiểu cơ bản về ranh giới giữa con người và AI trong bối cảnh y tế"
+    },
+    {
+      "aspectName": "Nhận Thức Rủi Ro & Quản Trị AI (AI Risk Awareness & Governance)",
+      "score": 3,
+      "comment": "Có nhận thức về rủi ro AI trong y tế nhưng cần cải thiện kỹ năng quản trị"
+    },
+    {
+      "aspectName": "Giao Tiếp AI & Prompt Engineering (AI Communication & Prompt Engineering)",
+      "score": 3,
+      "comment": "Hiểu cơ bản về prompt engineering nhưng cần thực hành nhiều hơn với các AI tools trong y tế như ChatGPT, Claude cho phân tích dữ liệu bệnh nhân"
+    },
+    {
+      "aspectName": "Nghiên Cứu & Tổng Hợp Thông Tin (Research & Information Synthesis)",
+      "score": 4,
+      "comment": "Có khả năng nghiên cứu và tổng hợp thông tin AI y tế tốt"
+    },
+    {
+      "aspectName": "Làm Việc Nhóm & Hợp Tác AI-Con Người (Teamwork & Human-AI Collaboration)",
+      "score": 3,
+      "comment": "Có khả năng làm việc nhóm nhưng cần cải thiện kỹ năng hợp tác với AI"
+    },
+    {
+      "aspectName": "Hiểu Biết Dữ Liệu & Xác Thực (Data Understanding & Validation)",
+      "score": 5,
+      "comment": "Rất tốt trong việc hiểu và xác thực dữ liệu y tế, đặc biệt là dữ liệu bệnh nhân và kết quả xét nghiệm"
+    },
+    {
+      "aspectName": "Phân Tách Vấn Đề & Xác Định Phạm Vi AI (Problem Decomposition & AI Scoping)",
+      "score": 3,
+      "comment": "Có khả năng phân tích vấn đề cơ bản nhưng cần cải thiện trong việc xác định phạm vi AI"
+    },
+    {
+      "aspectName": "Năng Lực Bảo Mật & Quyền Riêng Tư (Security & Privacy Competency)",
+      "score": 4,
+      "comment": "Có nhận thức tốt về bảo mật và quyền riêng tư trong AI y tế"
+    },
+    {
+      "aspectName": "Thành Thạo Công Cụ AI Cốt Lõi (Core AI Tools Mastery)",
+      "score": 2,
+      "comment": "Chưa thành thạo các công cụ AI cốt lõi trong y tế như IBM Watson Health, Google Health AI"
+    },
+    {
+      "aspectName": "Đánh Giá & Lựa Chọn Công Cụ (Tool Evaluation & Selection)",
+      "score": 3,
+      "comment": "Có khả năng đánh giá cơ bản nhưng cần cải thiện trong việc lựa chọn công cụ phù hợp"
+    },
+    {
+      "aspectName": "Tích Hợp & Thiết Kế Quy Trình (Integration & Workflow Design)",
+      "score": 2,
+      "comment": "Cần cải thiện kỹ năng tích hợp AI tools vào quy trình làm việc y tế"
+    },
+    {
+      "aspectName": "Đổi Mới & Phát Triển Tùy Chỉnh (Innovation & Custom Development)",
+      "score": 2,
+      "comment": "Chưa có nhiều kinh nghiệm trong việc phát triển giải pháp AI tùy chỉnh cho y tế"
+    }
+  ],
+  "_note": "File này chứa TẤT CẢ 14 aspects. Mỗi aspect có điểm từ 1-7, điểm này tương ứng với level trong competencySkillData. Ví dụ: aspect 'Khả Năng Thích Ứng & Tư Duy Phát Triển' với score=3 sẽ map với competency 'Khả Năng Thích Ứng & Tư Duy Phát Triển (Level 3)'.",
+  "model": "gemini-2.0-flash-exp"
+}
+
