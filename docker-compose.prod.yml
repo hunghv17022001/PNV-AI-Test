@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   ai-test-api:
@@ -6,7 +6,7 @@ services:
     container_name: ai-test-api-prod
     restart: unless-stopped
     ports:
-      - "3002:3000"
+      - "3010:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
@@ -18,4 +18,3 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-

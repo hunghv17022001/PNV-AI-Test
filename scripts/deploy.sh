@@ -21,7 +21,7 @@ case "$ENVIRONMENT" in
     ;;
   production|prod)
     ENV="prod"
-    PORT=3002
+    PORT=3010
     CONTAINER_NAME="${IMAGE_NAME}-prod"
     ENV_FILE="/opt/ai-test/.env"
     ;;

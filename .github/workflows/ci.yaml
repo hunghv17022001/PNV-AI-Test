@@ -229,7 +229,7 @@ jobs:
             docker run -d \
               --name ai-test-api-prod \
               --restart unless-stopped \
-              -p 3002:3000 \
+              -p 3010:3000 \
               --env-file /opt/ai-test/.env \
               ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
             rm -f image.tar.gz
