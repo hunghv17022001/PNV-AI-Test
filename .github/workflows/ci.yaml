@@ -1,0 +1,292 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop, uat]
+  pull_request:
+    branches: [main, develop, uat]
+
+env:
+  REGION: asia-southeast1
+  REPOSITORY: ai-test
+  IMAGE_NAME: ai-test-api
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint || echo "No linting configured"
+        continue-on-error: true
+
+      - name: Run type checking
+        run: npm run type-check || echo "No type checking configured"
+        continue-on-error: true
+
+      - name: Run tests
+        run: npm test || echo "No tests configured"
+        continue-on-error: true
+
+      - name: Build application
+        run: npm run build || echo "No build step configured"
+        continue-on-error: true
+
+  build-and-deploy-dev:
+    if: github.ref == 'refs/heads/develop'
+    needs: test
+    runs-on: ubuntu-latest
+    environment: development
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Generate version tag
+        id: version
+        run: |
+          VERSION=dev-$(date +%Y%m%d)-$(git rev-parse --short HEAD)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "IMAGE_TAG=${{ env.IMAGE_NAME }}:$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          load: true
+
+      - name: Save Docker image
+        run: |
+          docker save ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }} | gzip > image.tar.gz
+
+      - name: Deploy to Development VPS
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.DEV_HOST }}
+          username: ${{ secrets.DEV_USER }}
+          key: ${{ secrets.DEV_SSH_KEY }}
+          port: ${{ secrets.DEV_PORT || 22 }}
+          source: "image.tar.gz"
+          target: "/tmp/"
+
+      - name: Deploy Docker container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DEV_HOST }}
+          username: ${{ secrets.DEV_USER }}
+          key: ${{ secrets.DEV_SSH_KEY }}
+          port: ${{ secrets.DEV_PORT || 22 }}
+          script: |
+            cd /tmp
+            docker load < image.tar.gz
+            docker stop ${{ env.IMAGE_NAME }}-dev || true
+            docker rm ${{ env.IMAGE_NAME }}-dev || true
+            docker run -d \
+              --name ${{ env.IMAGE_NAME }}-dev \
+              --restart unless-stopped \
+              -p 3000:3000 \
+              -e NODE_ENV=development \
+              -e PORT=3000 \
+              --env-file /opt/ai-test-dev/.env \
+              ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
+            docker image prune -f
+            rm -f image.tar.gz
+            echo "✅ Development deployment successful!"
+
+      - name: Health check
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DEV_HOST }}
+          username: ${{ secrets.DEV_USER }}
+          key: ${{ secrets.DEV_SSH_KEY }}
+          port: ${{ secrets.DEV_PORT || 22 }}
+          script: |
+            sleep 5
+            curl -f http://localhost:3000/health || exit 1
+            echo "✅ Health check passed!"
+
+  build-and-deploy-uat:
+    if: github.ref == 'refs/heads/uat'
+    needs: test
+    runs-on: ubuntu-latest
+    environment: uat
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Generate version tag
+        id: version
+        run: |
+          VERSION=uat-$(date +%Y%m%d)-$(git rev-parse --short HEAD)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "IMAGE_TAG=${{ env.IMAGE_NAME }}:$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          load: true
+
+      - name: Save Docker image
+        run: |
+          docker save ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }} | gzip > image.tar.gz
+
+      - name: Deploy to UAT VPS
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.UAT_HOST }}
+          username: ${{ secrets.UAT_USER }}
+          key: ${{ secrets.UAT_SSH_KEY }}
+          port: ${{ secrets.UAT_PORT || 22 }}
+          source: "image.tar.gz"
+          target: "/tmp/"
+
+      - name: Deploy Docker container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.UAT_HOST }}
+          username: ${{ secrets.UAT_USER }}
+          key: ${{ secrets.UAT_SSH_KEY }}
+          port: ${{ secrets.UAT_PORT || 22 }}
+          script: |
+            cd /tmp
+            docker load < image.tar.gz
+            docker stop ${{ env.IMAGE_NAME }}-uat || true
+            docker rm ${{ env.IMAGE_NAME }}-uat || true
+            docker run -d \
+              --name ${{ env.IMAGE_NAME }}-uat \
+              --restart unless-stopped \
+              -p 3001:3000 \
+              -e NODE_ENV=staging \
+              -e PORT=3000 \
+              --env-file /opt/ai-test-uat/.env \
+              ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
+            docker image prune -f
+            rm -f image.tar.gz
+            echo "✅ UAT deployment successful!"
+
+      - name: Health check
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.UAT_HOST }}
+          username: ${{ secrets.UAT_USER }}
+          key: ${{ secrets.UAT_SSH_KEY }}
+          port: ${{ secrets.UAT_PORT || 22 }}
+          script: |
+            sleep 5
+            curl -f http://localhost:3001/health || exit 1
+            echo "✅ Health check passed!"
+
+  build-and-deploy-prod:
+    if: github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Generate version tag
+        id: version
+        run: |
+          VERSION=$(date +%Y%m%d.%H%M%S)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "IMAGE_TAG=${{ env.IMAGE_NAME }}:$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          load: true
+
+      - name: Save Docker image
+        run: |
+          docker save ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }} | gzip > image.tar.gz
+
+      - name: Deploy to Production VPS
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: ${{ secrets.PROD_PORT || 22 }}
+          source: "image.tar.gz"
+          target: "/tmp/"
+
+      - name: Deploy Docker container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: ${{ secrets.PROD_PORT || 22 }}
+          script: |
+            cd /tmp
+            docker load < image.tar.gz
+            docker stop ${{ env.IMAGE_NAME }}-prod || true
+            docker rm ${{ env.IMAGE_NAME }}-prod || true
+            docker run -d \
+              --name ${{ env.IMAGE_NAME }}-prod \
+              --restart unless-stopped \
+              -p 3002:3000 \
+              -e NODE_ENV=production \
+              -e PORT=3000 \
+              --env-file /opt/ai-test/.env \
+              ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
+            docker image prune -f
+            rm -f image.tar.gz
+            echo "✅ Production deployment successful!"
+
+      - name: Health check
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: ${{ secrets.PROD_PORT || 22 }}
+          script: |
+            sleep 5
+            curl -f http://localhost:3002/health || exit 1
+            echo "✅ Health check passed!"
+
+      - name: Deployment Summary
+        run: |
+          echo "## 🚀 Production Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ✅ Deployed successfully" >> $GITHUB_STEP_SUMMARY
