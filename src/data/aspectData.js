@@ -14,7 +14,7 @@ export const aspectData = [
       "Ability to adapt to changes and maintain a growth mindset in the context of AI evolution.",
   },
   {
-    name: "Tự Học & Cải Tiến Liên Tục (Self-Learning & Continuous Improvement)",
+    name: "Tự Học & Cải Tiến Liên Tục (Self-Learning & Continuous Improvement).",
     dimension: CompetencyDimension.MINDSET,
     weightWithinDimension: 0.2,
     represent: "A2",
