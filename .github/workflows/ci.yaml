@@ -11,9 +11,6 @@ env:
   REPOSITORY: ai-test
   IMAGE_NAME: ai-test-api
 
-# ---------------------------
-# 1) CI JOB (chạy cho cả PUSH & PR)
-# ---------------------------
 jobs:
   ci-check:
     name: Run CI (lint + test + build)
@@ -45,10 +42,6 @@ jobs:
       - name: Build application
         run: npm run build || echo "No build step configured"
         continue-on-error: true
-
-  # ---------------------------
-  # 2) DEPLOY JOBS (CHỈ CHẠY KHI PUSH, KHÔNG CHẠY KHI PR)
-  # ---------------------------
 
   build-and-deploy-dev:
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
